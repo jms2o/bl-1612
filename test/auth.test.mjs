@@ -18,6 +18,7 @@ test("rechaza sesiones manipuladas o vencidas", () => {
 
 test("analiza cookies y compara credenciales", () => {
   assert.deepEqual(parseCookies("tema=oscuro; sesion=abc%20123"), { tema: "oscuro", sesion: "abc 123" });
+  assert.deepEqual(parseCookies("sesion=%malformada"), { sesion: "%malformada" });
   assert.equal(secureStringEqual("secreto", "secreto"), true);
   assert.equal(secureStringEqual("secreto", "otro"), false);
 });
