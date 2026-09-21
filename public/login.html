@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071018" />
+    <title>Acceso privado · BolsaLab</title>
+    <link rel="stylesheet" href="/login.css" />
+  </head>
+  <body>
+    <main class="login-shell">
+      <section class="login-card">
+        <div class="brand-mark">BL</div>
+        <p class="eyebrow">ACCESO PRIVADO</p>
+        <h1>Entra a BolsaLab</h1>
+        <p class="intro">Tu simulador y su bitácora quedan protegidos detrás de esta sesión.</p>
+
+        <form id="loginForm">
+          <label>
+            Usuario
+            <input id="username" name="username" autocomplete="username" required autofocus />
+          </label>
+          <label>
+            Contraseña
+            <input id="password" name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <p id="loginError" class="error" role="alert" hidden></p>
+          <button id="loginButton" type="submit">Entrar</button>
+        </form>
+
+        <p class="note">Simulación educativa · No mueve dinero real</p>
+      </section>
+    </main>
+    <script type="module" src="/login.js"></script>
+  </body>
+</html>

@@ -193,5 +193,9 @@ qs("rebalanceButton").addEventListener("click", openRebalance);
 qs("confirmOrdersButton").addEventListener("click", confirmOrders);
 qs("contributionButton").addEventListener("click", addContribution);
 qs("resetButton").addEventListener("click", resetSimulation);
+qs("logoutButton").addEventListener("click", async () => {
+  await fetch("/api/logout", { method: "POST" });
+  window.location.replace("/login");
+});
 
 refreshMarket();

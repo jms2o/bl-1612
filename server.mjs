@@ -2,11 +2,21 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  createSessionToken,
+  parseCookies,
+  secureStringEqual,
+  sessionDurationSeconds,
+  verifySessionToken,
+} from "./lib/auth.mjs";
 
 const root = fileURLToPath(new URL("./public", import.meta.url));
 const strategyPath = fileURLToPath(new URL("./lib/strategy.mjs", import.meta.url));
 const port = Number(process.env.PORT || 4173);
 const allowedSymbol = /^[A-Z0-9.^=-]{1,32}$/i;
+const sessionCookie = "bolsalab_session";
+const loginAttempts = new Map();
+const publicPaths = new Set(["/login", "/login.html", "/login.css", "/login.js"]);
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -22,6 +32,88 @@ function json(response, status, body) {
     "Cache-Control": "no-store",
   });
   response.end(JSON.stringify(body));
+}
+
+function securityHeaders(response) {
+  response.setHeader("X-Content-Type-Options", "nosniff");
+  response.setHeader("X-Frame-Options", "DENY");
+  response.setHeader("Referrer-Policy", "no-referrer");
+  response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  response.setHeader("Content-Security-Policy", "default-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+}
+
+function authConfig() {
+  return {
+    username: process.env.BOLSALAB_USER || "",
+    password: process.env.BOLSALAB_PASSWORD || "",
+    secret: process.env.SESSION_SECRET || "",
+  };
+}
+
+function hasValidConfig(config) {
+  return Boolean(config.username && config.password && config.secret.length >= 32);
+}
+
+function currentSession(request) {
+  const { secret } = authConfig();
+  const token = parseCookies(request.headers.cookie)[sessionCookie];
+  return verifySessionToken(token, secret);
+}
+
+function clientAddress(request) {
+  return String(request.headers["x-forwarded-for"] || request.socket.remoteAddress || "unknown").split(",")[0].trim();
+}
+
+function cookieOptions(request) {
+  const secure = request.headers["x-forwarded-proto"] === "https" || process.env.NODE_ENV === "production";
+  return `HttpOnly; SameSite=Strict; Path=/; Max-Age=${sessionDurationSeconds}${secure ? "; Secure" : ""}`;
+}
+
+async function readJson(request) {
+  let body = "";
+  for await (const chunk of request) {
+    body += chunk;
+    if (body.length > 16_384) throw new Error("PAYLOAD_TOO_LARGE");
+  }
+  return JSON.parse(body || "{}");
+}
+
+async function loginRoute(request, response) {
+  const config = authConfig();
+  if (!hasValidConfig(config)) {
+    return json(response, 503, { error: "El acceso privado aún no está configurado en el servidor." });
+  }
+
+  const address = clientAddress(request);
+  const attempt = loginAttempts.get(address);
+  if (attempt?.blockedUntil > Date.now()) {
+    return json(response, 429, { error: "Demasiados intentos. Espera 15 minutos antes de volver a intentar." });
+  }
+
+  try {
+    const body = await readJson(request);
+    const valid = secureStringEqual(body.username, config.username) && secureStringEqual(body.password, config.password);
+    if (!valid) {
+      const failures = (attempt?.failures || 0) + 1;
+      loginAttempts.set(address, {
+        failures,
+        blockedUntil: failures >= 5 ? Date.now() + 15 * 60 * 1000 : 0,
+      });
+      return json(response, 401, { error: failures >= 5 ? "Acceso bloqueado durante 15 minutos." : "Usuario o contraseña incorrectos." });
+    }
+
+    loginAttempts.delete(address);
+    const token = createSessionToken(config.username, config.secret);
+    response.setHeader("Set-Cookie", `${sessionCookie}=${encodeURIComponent(token)}; ${cookieOptions(request)}`);
+    return json(response, 200, { ok: true });
+  } catch (error) {
+    return json(response, error.message === "PAYLOAD_TOO_LARGE" ? 413 : 400, { error: "Solicitud inválida." });
+  }
+}
+
+function logoutRoute(request, response) {
+  response.setHeader("Set-Cookie", `${sessionCookie}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`);
+  return json(response, 200, { ok: true });
 }
 
 async function fetchYahooChart(symbol) {
@@ -127,8 +219,28 @@ async function staticRoute(request, response) {
 }
 
 const server = createServer(async (request, response) => {
+  securityHeaders(response);
+  const url = new URL(request.url, `http://${request.headers.host}`);
+
+  if (request.method === "POST" && url.pathname === "/api/login") return loginRoute(request, response);
+  if (request.method === "POST" && url.pathname === "/api/logout") return logoutRoute(request, response);
+
+  const session = currentSession(request);
+  if (!session && !publicPaths.has(url.pathname)) {
+    if (url.pathname.startsWith("/api/")) return json(response, 401, { error: "Sesión requerida." });
+    response.writeHead(302, { Location: "/login" });
+    return response.end();
+  }
+
+  if (session && (url.pathname === "/login" || url.pathname === "/login.html")) {
+    response.writeHead(302, { Location: "/" });
+    return response.end();
+  }
+
   if (request.method !== "GET") return json(response, 405, { error: "Método no permitido" });
+  if (url.pathname === "/api/session") return json(response, 200, { authenticated: true, username: session.username });
   if (request.url.startsWith("/api/quotes")) return quoteRoute(request, response);
+  if (url.pathname === "/login") request.url = "/login.html";
   return staticRoute(request, response);
 });
 

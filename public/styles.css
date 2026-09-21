@@ -27,6 +27,8 @@ button { cursor: pointer; }
 .status-demo { color: var(--amber); background: rgba(255,209,102,.11); }
 .status-loading { color: var(--blue); background: rgba(122,162,255,.11); }
 .paper-badge { border: 1px solid #324653; color: #b7c6ce; }
+.logout-button { padding: 7px 10px; border: 1px solid #324653; border-radius: 999px; color: #b7c6ce; background: transparent; font-size: 11px; font-weight: 700; }
+.logout-button:hover { color: var(--text); border-color: #607785; }
 main { width: min(1460px, calc(100% - 40px)); margin: 0 auto; padding: 54px 0 72px; }
 .hero { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 34px; }
 .hero h1 { margin: 8px 0 12px; max-width: 760px; font-size: clamp(34px, 5vw, 64px); line-height: .99; letter-spacing: -.055em; }
@@ -119,7 +121,7 @@ dialog form { position: relative; padding: 28px; }
 @media (max-width: 600px) {
   .topbar { height: auto; padding: 14px 18px; }
   .status-wrap { align-items: flex-end; flex-direction: column; gap: 5px; }
-  .status, .paper-badge { font-size: 9px; padding: 5px 8px; }
+  .status, .paper-badge, .logout-button { font-size: 9px; padding: 5px 8px; }
   main { width: min(100% - 24px, 1460px); padding-top: 34px; }
   .metrics-grid { grid-template-columns: 1fr; }
   .metric-card { min-height: 112px; }

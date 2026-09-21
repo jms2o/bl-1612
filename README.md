@@ -13,6 +13,7 @@ Prototipo educativo para observar cómo un asistente de inversión de largo plaz
 - Compras fraccionadas simuladas y bitácora local.
 - Señales explicables basadas en tendencia, promedio de 200 días y volatilidad.
 - Límites fijos: sin margen, opciones, ventas en corto ni retiros.
+- Acceso privado de un solo usuario con sesión segura y bloqueo temporal por intentos fallidos.
 
 ## Ejecutar
 
@@ -23,6 +24,16 @@ npm start
 ```
 
 Después abre `http://localhost:4173`.
+
+## Acceso privado
+
+Configura estas variables de entorno antes de iniciar:
+
+- `BOLSALAB_USER`: nombre de usuario.
+- `BOLSALAB_PASSWORD`: contraseña de acceso.
+- `SESSION_SECRET`: texto aleatorio de al menos 32 caracteres para firmar la sesión.
+
+En producción, agrega las tres en el panel de variables de entorno de Hostinger. Las credenciales no deben guardarse en GitHub.
 
 ## Pruebas
 
