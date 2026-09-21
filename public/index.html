@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071018" />
+    <title>BolsaLab · Simulador de inversión</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#">
+        <span class="brand-mark">BL</span>
+        <span>BolsaLab</span>
+      </a>
+      <div class="status-wrap">
+        <span id="dataStatus" class="status status-loading">Cargando mercado…</span>
+        <span class="paper-badge">DINERO VIRTUAL</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">ASISTENTE EXPLICABLE · MÉXICO + EE. UU.</p>
+          <h1>Aprende cómo decide antes de arriesgar un peso.</h1>
+          <p class="hero-copy">
+            Una cartera simulada de largo plazo con reglas visibles, compras fraccionadas y control de riesgo.
+          </p>
+        </div>
+        <button id="rebalanceButton" class="primary-button">Ejecutar rebalanceo simulado</button>
+      </section>
+
+      <section class="metrics-grid" aria-label="Resumen de cartera">
+        <article class="metric-card metric-main">
+          <p>Valor total</p>
+          <strong id="totalValue">$1,000.00</strong>
+          <span id="totalPnl" class="neutral">$0.00 desde el inicio</span>
+        </article>
+        <article class="metric-card">
+          <p>Invertido</p>
+          <strong id="investedValue">$0.00</strong>
+          <span id="investedShare">0% de la cartera</span>
+        </article>
+        <article class="metric-card">
+          <p>Efectivo disponible</p>
+          <strong id="cashValue">$1,000.00</strong>
+          <span>Meta de reserva: 10%</span>
+        </article>
+        <article class="metric-card">
+          <p>Perfil del bot</p>
+          <strong>Moderado</strong>
+          <span>Horizonte: meses o años</span>
+        </article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">COMPOSICIÓN OBJETIVO</p>
+              <h2>Cartera diversificada</h2>
+            </div>
+            <span id="updatedAt" class="muted">—</span>
+          </div>
+          <div id="allocationBars" class="allocation-bars"></div>
+          <div class="guardrails">
+            <span>Sin margen</span>
+            <span>Sin opciones</span>
+            <span>Sin ventas en corto</span>
+            <span>Revisión mensual</span>
+          </div>
+        </article>
+
+        <article class="panel rules-panel">
+          <p class="eyebrow">REGLAS ACTIVAS</p>
+          <h2>Qué puede y qué no puede hacer</h2>
+          <ol class="rules-list">
+            <li><span>01</span><div><strong>Compra por objetivo</strong><p>Invierte sólo para acercarse a los porcentajes definidos.</p></div></li>
+            <li><span>02</span><div><strong>Reserva protegida</strong><p>Mantiene al menos 10% del valor en efectivo virtual.</p></div></li>
+            <li><span>03</span><div><strong>Decisiones auditables</strong><p>Cada señal muestra tendencia, volatilidad y motivo.</p></div></li>
+          </ol>
+        </article>
+      </section>
+
+      <section class="panel positions-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">POSICIONES</p>
+            <h2>Mercados de México y Estados Unidos</h2>
+          </div>
+          <button id="refreshButton" class="secondary-button">Actualizar precios</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Activo</th>
+                <th>Mercado</th>
+                <th>Precio</th>
+                <th>Valor</th>
+                <th>Peso actual / meta</th>
+                <th>Señal</th>
+              </tr>
+            </thead>
+            <tbody id="positionsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="panel recommendations-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">RECOMENDACIONES</p>
+              <h2>Por qué tomaría cada decisión</h2>
+            </div>
+          </div>
+          <div id="recommendations" class="recommendations"></div>
+        </article>
+
+        <article class="panel activity-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">BITÁCORA</p>
+              <h2>Operaciones simuladas</h2>
+            </div>
+          </div>
+          <div id="activity" class="activity"></div>
+          <div class="activity-actions">
+            <label>
+              Aportación virtual
+              <div class="money-input"><span>$</span><input id="contributionInput" type="number" min="50" step="50" value="500" /><small>MXN</small></div>
+            </label>
+            <button id="contributionButton" class="secondary-button">Agregar aportación</button>
+            <button id="resetButton" class="link-button">Reiniciar simulación</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="disclaimer">
+        <strong>Simulación educativa.</strong>
+        <p>No ejecuta operaciones reales ni promete rendimientos. Las fracciones, precios y disponibilidad pueden variar según el bróker.</p>
+      </section>
+    </main>
+
+    <dialog id="confirmDialog">
+      <form method="dialog">
+        <button class="dialog-close" value="cancel" aria-label="Cerrar">×</button>
+        <p class="eyebrow">CONFIRMACIÓN MANUAL</p>
+        <h2>Órdenes virtuales propuestas</h2>
+        <div id="orderPreview" class="order-preview"></div>
+        <p class="dialog-note">Esto sólo modifica la simulación guardada en tu navegador.</p>
+        <div class="dialog-actions">
+          <button value="cancel" class="secondary-button">Cancelar</button>
+          <button id="confirmOrdersButton" value="default" class="primary-button">Confirmar simulación</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

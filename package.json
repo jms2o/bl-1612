@@ -1,0 +1,14 @@
+{
+  "name": "bolsa-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Simulador educativo de acciones y ETF para México y Estados Unidos.",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
