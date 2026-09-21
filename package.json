@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Simulador educativo de acciones y ETF para México y Estados Unidos.",
   "scripts": {
+    "build": "node -e \"console.log('BolsaLab no requiere compilación')\"",
     "start": "node server.mjs",
     "test": "node --test"
   },
